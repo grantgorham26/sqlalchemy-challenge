@@ -68,20 +68,35 @@ def precipitation():
     results = session.query(Measurement.date,Measurement.prcp).\
                       filter(Measurement.date <= start_date_str,
                       Measurement.date >= end_date.strftime('%Y-%m-%d')).all()
+#create list to put dictionary of data into
     precipitation_data = []
     for date, prcp in results:
+#create empty dictionary for date and precipitaion 
         precipitation_dict = {}
         precipitation_dict['date']= date
         precipitation_dict['precipitation'] = prcp
         precipitation_data.append(precipitation_dict)
+# print list in json form 
     return jsonify(precipitation_data)
 
 
 #stations route 
 @app.route('/api/v1.0/stations')
 def stations():
-    
-    return
+    #list of columns to query for statin api
+    sel = [Station.id,Station.station,Station.name, Station.latitude, Station.longitude, Station.elevation]
+    results = session.query(*sel).all()
+    station_data = []
+    for id, station, name, latitude, longitude, elevation in results:
+        station_dict = {}
+        station_dict['id'] = id
+        station_dict['station'] = station
+        station_dict['name'] = name
+        station_dict['latitude'] = latitude
+        station_dict['longitude'] = longitude
+        station_dict['elevation'] = elevation
+        station_data.append(station_dict)
+    return jsonify(station_data)
 
 # #temperature route
 # @app.route('/api/v1.0/tobs')
