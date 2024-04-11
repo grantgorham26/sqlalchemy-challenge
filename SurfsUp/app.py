@@ -36,9 +36,12 @@ app = Flask(__name__)
 
 
 
+
+
 #################################################
 # Flask Routes
 #################################################
+
 
 #creating welcome page
 @app.route('/')
@@ -56,14 +59,17 @@ def welcome():
 #precipitation route
 @app.route('/api/v1.0/precipitation')
 def precipitation():
+
     #find the most recent day recorded
     recent_rain = session.query(Measurement).filter(Measurement.date).\
         order_by(Measurement.date.desc()).first()
+    
 # Starting from the most recent data point in the database. 
     start_date_str = recent_rain.date
     start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
 # Calculate the date one year from the last date in data set.
     end_date = start_date - timedelta(days=365)
+    
 #query date and precipitation with the wanted params
     results = session.query(Measurement.date,Measurement.prcp).\
                       filter(Measurement.date <= start_date_str,
@@ -98,10 +104,31 @@ def stations():
         station_data.append(station_dict)
     return jsonify(station_data)
 
-# #temperature route
-# @app.route('/api/v1.0/tobs')
-# def temperatures():
-#     return
+# temperature route
+@app.route('/api/v1.0/tobs')
+def temperatures():
+    #define variables that will be used
+    #find the most recent day recorded
+    recent_rain = session.query(Measurement).filter(Measurement.date).\
+        order_by(Measurement.date.desc()).first()
+# Starting from the most recent data point in the database. 
+    start_date_str = recent_rain.date
+    start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+# Calculate the date one year from the last date in data set.
+    end_date = start_date - timedelta(days=365)
+    
+    results_temp = session.query(Measurement.date,Measurement.tobs).\
+                      filter(Measurement.date <= start_date_str,
+                      Measurement.date >= end_date.strftime('%Y-%m-%d')).all()
+    #create list to put dictionary of data into
+    temperature_data = []
+    for date, tobs in results_temp:
+#create empty dictionary for date and precipitaion 
+        temperature_dict = {}
+        temperature_dict['date']= date
+        temperature_dict['temperature'] = tobs
+        temperature_data.append(temperature_dict)
+    return jsonify(temperature_data)
 
 # #dynamic route start and end dates 
 # @app.route('/api/v1.0/<start>')
