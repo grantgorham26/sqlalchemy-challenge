@@ -114,20 +114,30 @@ def temperatures():
     #find the most recent day recorded
     recent_rain = session.query(Measurement).filter(Measurement.date).\
         order_by(Measurement.date.desc()).first()
-# Starting from the most recent data point in the database. 
+    # Starting from the most recent data point in the database. 
     start_date_str = recent_rain.date
     start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
-# Calculate the date one year from the last date in data set.
+    # Calculate the date one year from the last date in data set.
     end_date = start_date - timedelta(days=365)
-    
-    results_temp = session.query(Measurement.date,Measurement.tobs).\
+
+    #get only the most active station
+    observation_counts = session.query(Measurement.station, func.count(Measurement.station)).\
+    group_by(Measurement.station).\
+    order_by(func.count(Measurement.station).desc()).all()
+    most_active_station = observation_counts[0][0]
+
+
+    #query station id, date and temp with the wanted params
+    results_temp = session.query(Measurement.station, Measurement.date, Measurement.tobs).\
                       filter(Measurement.date <= start_date_str,
-                      Measurement.date >= end_date.strftime('%Y-%m-%d')).all()
+                      Measurement.date >= end_date.strftime('%Y-%m-%d'),
+                      Measurement.station == most_active_station).all()
     #create list to put dictionary of data into
     temperature_data = []
-    for date, tobs in results_temp:
+    for station, date, tobs in results_temp:
 #create empty dictionary for date and precipitaion 
         temperature_dict = {}
+        temperature_dict['station'] = station
         temperature_dict['date']= date
         temperature_dict['temperature'] = tobs
         temperature_data.append(temperature_dict)
@@ -135,9 +145,11 @@ def temperatures():
     return jsonify(temperature_data)
 
 # #dynamic route start and end dates 
-# @app.route('/api/v1.0/<start>')
-# def start_date():
-#     return
+@app.route('/api/v1.0/<start>')
+def start_date(start):
+    session = Session(engine)
+
+    return
 
 
 # @app.route('/api/v1.0/<start>/<end>')
