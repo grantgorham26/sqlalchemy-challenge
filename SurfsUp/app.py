@@ -59,36 +59,37 @@ def welcome():
 #precipitation route
 @app.route('/api/v1.0/precipitation')
 def precipitation():
-
+    session = Session(engine)
     #find the most recent day recorded
     recent_rain = session.query(Measurement).filter(Measurement.date).\
-        order_by(Measurement.date.desc()).first()
-    
-# Starting from the most recent data point in the database. 
+        order_by(Measurement.date.desc()).first()    
+    # Starting from the most recent data point in the database. 
     start_date_str = recent_rain.date
     start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
-# Calculate the date one year from the last date in data set.
+    # Calculate the date one year from the last date in data set.
     end_date = start_date - timedelta(days=365)
     
-#query date and precipitation with the wanted params
+    #query date and precipitation with the wanted params
     results = session.query(Measurement.date,Measurement.prcp).\
                       filter(Measurement.date <= start_date_str,
                       Measurement.date >= end_date.strftime('%Y-%m-%d')).all()
-#create list to put dictionary of data into
+    #create list to put dictionary of data into
     precipitation_data = []
     for date, prcp in results:
-#create empty dictionary for date and precipitaion 
+    #create empty dictionary for date and precipitaion 
         precipitation_dict = {}
         precipitation_dict['date']= date
         precipitation_dict['precipitation'] = prcp
         precipitation_data.append(precipitation_dict)
-# print list in json form 
+    # print list in json form 
+    session.close()
     return jsonify(precipitation_data)
 
 
 #stations route 
 @app.route('/api/v1.0/stations')
 def stations():
+    session = Session(engine)
     #list of columns to query for statin api
     sel = [Station.id,Station.station,Station.name, Station.latitude, Station.longitude, Station.elevation]
     results = session.query(*sel).all()
@@ -102,11 +103,13 @@ def stations():
         station_dict['longitude'] = longitude
         station_dict['elevation'] = elevation
         station_data.append(station_dict)
+        session.close()
     return jsonify(station_data)
 
 # temperature route
 @app.route('/api/v1.0/tobs')
 def temperatures():
+    session = Session(engine)
     #define variables that will be used
     #find the most recent day recorded
     recent_rain = session.query(Measurement).filter(Measurement.date).\
@@ -128,6 +131,7 @@ def temperatures():
         temperature_dict['date']= date
         temperature_dict['temperature'] = tobs
         temperature_data.append(temperature_dict)
+        session.close()
     return jsonify(temperature_data)
 
 # #dynamic route start and end dates 
