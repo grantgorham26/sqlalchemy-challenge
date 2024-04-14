@@ -179,9 +179,6 @@ def start_date_end_date(start,end):
     if start is None:
         return "Please provide a start date parameter in the URL.", 400
     
-    if end is None:
-
-        return end == '2017-08-23'
 
     min_temp = session.query(Measurement.tobs, func.min(Measurement.tobs)).\
         filter(Measurement.date >= start, Measurement.date <= end).all()[0][0]
