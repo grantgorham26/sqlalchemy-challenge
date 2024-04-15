@@ -78,14 +78,9 @@ def precipitation():
     results = session.query(Measurement.date,Measurement.prcp).\
                       filter(Measurement.date <= start_date_str,
                       Measurement.date >= end_date.strftime('%Y-%m-%d')).all()
-    #create list to put dictionary of data into
-    precipitation_data = []
-    for date, prcp in results:
-    #create empty dictionary for date and precipitaion 
-        precipitation_dict = {}
-        precipitation_dict['date']= date
-        precipitation_dict['precipitation'] = prcp
-        precipitation_data.append(precipitation_dict)
+    #Create list of dictionaries for precipitation data using list comprehension 
+    precipitation_data = [{'date':date,'precipitation':prcp} for date, prcp in results]
+   
     # print list in json form 
     session.close()
     return jsonify(precipitation_data)
@@ -98,19 +93,13 @@ def stations():
     #list of columns to query for statin api
     sel = [Station.id,Station.station,Station.name, Station.latitude, Station.longitude, Station.elevation]
     results = session.query(*sel).all()
-    #create empty list to store statin data
-    station_data = []
-    #store data in a dictionary so that it can be added to the empty list
-    for id, station, name, latitude, longitude, elevation in results:
-        station_dict = {}
-        station_dict['id'] = id
-        station_dict['station'] = station
-        station_dict['name'] = name
-        station_dict['latitude'] = latitude
-        station_dict['longitude'] = longitude
-        station_dict['elevation'] = elevation
-        station_data.append(station_dict)
-        session.close()
+    #Create list of dictionaries for station data using list comprehension 
+    station_data = [{'id':id, 'station':station, 'name':name, 'latitude':latitude, 'longitude':longitude, 'elevation':elevation}
+                    for id, station, name, latitude, longitude, elevation in results]
+    
+    
+        
+    session.close()
     return jsonify(station_data)
 
 # temperature route
@@ -139,16 +128,12 @@ def temperatures():
                       filter(Measurement.date <= start_date_str,
                       Measurement.date >= end_date.strftime('%Y-%m-%d'),
                       Measurement.station == most_active_station).all()
-    #create list to put dictionary of data into
-    temperature_data = []
-    for station, date, tobs in results_temp:
-#create empty dictionary for date and precipitaion 
-        temperature_dict = {}
-        temperature_dict['station'] = station
-        temperature_dict['date']= date
-        temperature_dict['temperature'] = tobs
-        temperature_data.append(temperature_dict)
-        session.close()
+    #Create list of dictionaries for temperature data using list comprehension 
+    temperature_data = [{'station':station, 'date':date, 'temperature': tobs} for station, date, tobs in results_temp]
+    
+
+        
+    session.close()
     return jsonify(temperature_data)
 
 # #dynamic route start and end dates 
@@ -191,9 +176,6 @@ def temperature_stats(start):
 @app.route('/api/v1.0/<start>/<end>')
 def temperature_stats_range(start, end):
     return get_temperature_stats(start, end)
-
-
-
 
 
 
