@@ -183,11 +183,11 @@ def get_temperature_stats(start, end=None):
         'Average Temperature': avg_temp
     })
 
-
+#route with no end date
 @app.route('/api/v1.0/<start>')
 def temperature_stats(start):
     return get_temperature_stats(start)
-
+#route with start and end date
 @app.route('/api/v1.0/<start>/<end>')
 def temperature_stats_range(start, end):
     return get_temperature_stats(start, end)
