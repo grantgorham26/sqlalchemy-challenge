@@ -48,15 +48,19 @@ app = Flask(__name__)
 def welcome():
     
     #list all routes 
-    return (
-        f'Available Routes:<br/>'
-        f'/api/v1.0/precipitation<br/>'
-        f'/api/v1.0/stations<br/>'
-        f'/api/v1.0/tobs<br/>'
-        f'/api/v1.0/start_date(yyyy-mm-dd)<br/>'
-        f'/api/v1.0/start_date(yyyy-mm-dd)/end_date(yyyy-mm-dd)'
+    return '''Welcome to this API, its all about weather in Hawaii. In this API you will be able to access precipitation,temperature(tobs) data,
+    the weather stations used to collect data. You can also set a date range and it will return the average, minimum and maximum temperature in that date range.<br/>
+    
+
+
+        Available Routes:<br/>
+        /api/v1.0/precipitation<br/>
+        /api/v1.0/stations<br/>
+        /api/v1.0/tobs<br/>
+        /api/v1.0/start_date(yyyy-mm-dd)<br/>
+        /api/v1.0/start_date(yyyy-mm-dd)/end_date(yyyy-mm-dd)
         
-    )
+'''
 #precipitation route
 @app.route('/api/v1.0/precipitation')
 def precipitation():
@@ -147,56 +151,50 @@ def temperatures():
         session.close()
     return jsonify(temperature_data)
 
-#dynamic route start and end dates 
-@app.route('/api/v1.0/<start>')
-#create a function to query temp stats with a start date parameter
-def start_date(start):
+# #dynamic route start and end dates 
+def get_temperature_stats(start, end=None):
     session = Session(engine)
-    if start is None:
-        return "Please provide a start date parameter in the URL.", 400
     
-
-    #query min,max and avg temp with a start date as the filter
-    min_temp = session.query(Measurement.tobs, func.min(Measurement.tobs)).\
-        filter(Measurement.date >= start).all()[0][0]
-    max_temp = session.query(Measurement.tobs, func.max(Measurement.tobs)).\
-        filter(Measurement.date >= start).all()[0][0]
-    avg_temp = session.query(Measurement.tobs, func.avg(Measurement.tobs)).\
-        filter(Measurement.date >= start).all()[0][0]
-
+    # Convert the start date parameter to datetime format
+    start_date = datetime.strptime(start, '%Y-%m-%d')
+    
+    # Initialize query to filter by start date
+    query = session.query(func.min(Measurement.tobs),
+                            func.max(Measurement.tobs),
+                            func.avg(Measurement.tobs)).\
+                    filter(Measurement.date >= start_date)
+    
+    # If end date is provided, add filter for end date
+    if end:
+        end_date = datetime.strptime(end, '%Y-%m-%d')
+        query = query.filter(Measurement.date <= end_date)
+    
+    # Execute the query
+    temp_stats = query.first()
+    
     session.close()
 
-    return jsonify ({'Low Temperature': min_temp,
-                     'Highest Temperature': max_temp,
-                     'Average Temperature': avg_temp
-                     
-                    })
+    # Unpack the tuple returned by the query
+    min_temp, max_temp, avg_temp = temp_stats
 
-    
+    return jsonify({
+        'Low Temperature': min_temp,
+        'Highest Temperature': max_temp,
+        'Average Temperature': avg_temp
+    })
 
+
+@app.route('/api/v1.0/<start>')
+def temperature_stats(start):
+    return get_temperature_stats(start)
 
 @app.route('/api/v1.0/<start>/<end>')
-#create a function to query temp stats with start and end date parameters
-def start_date_end_date(start,end):
-    session = Session(engine)
-    if start is None:
-        return "Please provide a start date parameter in the URL.", 400
-    #query min,max, avg temp with a start and end date as filters.
+def temperature_stats_range(start, end):
+    return get_temperature_stats(start, end)
 
-    min_temp = session.query(Measurement.tobs, func.min(Measurement.tobs)).\
-        filter(Measurement.date >= start, Measurement.date <= end).all()[0][0]
-    max_temp = session.query(Measurement.tobs, func.max(Measurement.tobs)).\
-        filter(Measurement.date >= start, Measurement.date <= end).all()[0][0]
-    avg_temp = session.query(Measurement.tobs, func.avg(Measurement.tobs)).\
-        filter(Measurement.date >= start, Measurement.date <= end).all()[0][0]
 
-    session.close()
 
-    return jsonify ({'Low Temperature': min_temp,
-                     'Highest Temperature': max_temp,
-                     'Average Temperature': avg_temp
-                     
-                    })
+
 
 
 if __name__ == "__main__":
