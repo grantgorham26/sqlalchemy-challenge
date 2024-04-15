@@ -94,7 +94,9 @@ def stations():
     #list of columns to query for statin api
     sel = [Station.id,Station.station,Station.name, Station.latitude, Station.longitude, Station.elevation]
     results = session.query(*sel).all()
+    #create empty list to store statin data
     station_data = []
+    #store data in a dictionary so that it can be added to the empty list
     for id, station, name, latitude, longitude, elevation in results:
         station_dict = {}
         station_dict['id'] = id
@@ -147,13 +149,14 @@ def temperatures():
 
 #dynamic route start and end dates 
 @app.route('/api/v1.0/<start>')
+#create a function to query temp stats with a start date parameter
 def start_date(start):
     session = Session(engine)
     if start is None:
         return "Please provide a start date parameter in the URL.", 400
     
 
-    
+    #query min,max and avg temp with a start date as the filter
     min_temp = session.query(Measurement.tobs, func.min(Measurement.tobs)).\
         filter(Measurement.date >= start).all()[0][0]
     max_temp = session.query(Measurement.tobs, func.max(Measurement.tobs)).\
@@ -173,12 +176,12 @@ def start_date(start):
 
 
 @app.route('/api/v1.0/<start>/<end>')
-
+#create a function to query temp stats with start and end date parameters
 def start_date_end_date(start,end):
     session = Session(engine)
     if start is None:
         return "Please provide a start date parameter in the URL.", 400
-    
+    #query min,max, avg temp with a start and end date as filters.
 
     min_temp = session.query(Measurement.tobs, func.min(Measurement.tobs)).\
         filter(Measurement.date >= start, Measurement.date <= end).all()[0][0]
