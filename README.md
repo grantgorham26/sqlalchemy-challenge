@@ -5,3 +5,5 @@ The purpose of this mini project was to use sqlalchemy to obtain weather data fr
 
 
 ### Part 1: Analyze and Explore the Climate Data
+
+### Part 2: Design Your Climate App
