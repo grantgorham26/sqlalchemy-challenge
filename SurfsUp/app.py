@@ -90,7 +90,7 @@ def precipitation():
 @app.route('/api/v1.0/stations')
 def stations():
     session = Session(engine)
-    #list of columns to query for statin api
+    #list of columns to query for station api
     sel = [Station.id,Station.station,Station.name, Station.latitude, Station.longitude, Station.elevation]
     results = session.query(*sel).all()
     #Create list of dictionaries for station data using list comprehension 
